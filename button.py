@@ -7,6 +7,7 @@ class Button():
         """Initialize button attributes."""
         self.screen = screen
         self.screen_rect = screen.get_rect()
+        self.msg = msg
 
         # Set the dimensions and properties of the button.
         self.width, self.height = 200, 50
@@ -27,6 +28,10 @@ class Button():
                                           self.button_color)
         self.msg_image_rect = self.msg_image.get_rect()
         self.msg_image_rect.center = self.rect.center
+
+    def set_y(self, y):
+        self.rect.centery = y
+        self.prep_msg(self.msg)
 
     def draw_button(self):
         # Draw blank button and then draw a message.

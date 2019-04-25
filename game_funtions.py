@@ -15,10 +15,20 @@ def check_keydown_events(event, app_settings, screen, stats, sb, ship, aliens,
         ship.moving_left = True
     elif event.key == pygame.K_SPACE:
         fire_bullet(app_settings, screen, ship, bullets)
-    elif event.key == pygame.K_q:
-        sys.exit()
     elif event.key == pygame.K_p:
-        start_game(app_settings, screen, stats, sb, ship, aliens, bullets)
+        if not stats.menu_open:
+            if not stats.pause:
+                stats.pause = True
+            else:
+                stats.pause = False
+    elif event.key == pygame.K_RETURN:
+        if stats.menu_open:
+            start_game(app_settings, screen, stats, sb, ship, aliens, bullets)
+    elif event.key == pygame.K_ESCAPE:
+        stats.menu_open = True
+        stats.game_active = False
+        stats.pause = False
+        pygame.mouse.set_visible(True)
 
 
 def fire_bullet(app_settings, screen, ship, bullets):
@@ -37,8 +47,8 @@ def check_keyup_evenets(event, ship):
         ship.moving_left = False
 
 
-def check_events(app_settings, screen, stats, sb, play_button, ship, aliens,
-                 bullets):
+def check_events(app_settings, screen, stats, sb, play_button, scores_button,
+                 exit_button, ship, aliens, bullets):
     """Respond to key and mouse events."""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -55,6 +65,8 @@ def check_events(app_settings, screen, stats, sb, play_button, ship, aliens,
             mouse_x, mouse_y = pygame.mouse.get_pos()
             check_play_button(app_settings, screen, stats, sb, play_button,
                               ship, aliens, bullets, mouse_x, mouse_y)
+            check_exit_button(stats, exit_button, mouse_x, mouse_y)
+            check_scores_button(scores_button, mouse_x, mouse_y)
 
 
 def check_play_button(app_settings, screen, stats, sb, play_button, ship,
@@ -65,8 +77,24 @@ def check_play_button(app_settings, screen, stats, sb, play_button, ship,
         start_game(app_settings, screen, stats, sb, ship, aliens, bullets)
 
 
+def check_scores_button(scores_button, mouse_x, mouse_y):
+    """Show the best scores"""
+    button_clicked = scores_button.rect.collidepoint(mouse_x, mouse_y)
+    pass
+
+
+def check_exit_button(stats, exit_button, mouse_x, mouse_y):
+    """Close the app when the player clicks Exit."""
+    button_clicked = exit_button.rect.collidepoint(mouse_x, mouse_y)
+    if button_clicked and stats.menu_open:
+        sys.exit()
+
+
 def start_game(app_settings, screen, stats, sb, ship, aliens, bullets):
     """Reset all statistic to start a new game"""
+    # Mark that menu is not open
+    stats.menu_open = False
+
     # Reset the game settings.
     app_settings.initialize_dynamic_settings()
 
@@ -76,7 +104,6 @@ def start_game(app_settings, screen, stats, sb, ship, aliens, bullets):
     # Reset the game statistic.
     stats.reset_stats()
     stats.game_active = True
-
 
     # Reset the scoreboard images.
     sb.prep_score()
@@ -93,25 +120,41 @@ def start_game(app_settings, screen, stats, sb, ship, aliens, bullets):
     ship.center_ship()
 
 
-def update_screen(app_settings, screen, stats, sb, ship, aliens, bullets,
-                  play_button):
-    """Update images on the screen and flip to the new screen"""
-    # Redraw the screen during each pass through the loop
+def create_menu(screen, app_settings, play_button, scores_button, exit_button):
+    """Create buttons and fill background"""
+    # Fill background
     screen.fill(app_settings.bg_color)
 
-    # Redraw all bullets behind ship and aliens.
-    for bullet in bullets.sprites():
-        bullet.draw_bullet()
+    # Draw buttons
+    buttons = [play_button, scores_button, exit_button]
+    first_button_position = screen.get_rect().centery - 2 * play_button.height
+    for i, button in enumerate(buttons):
+        button.set_y(first_button_position + 2 * i * button.height)
+        button.draw_button()
 
-    ship.blitme()
-    aliens.draw(screen)
 
-    # Draw the score information
-    sb.show_score()
+def update_screen(app_settings, screen, stats, sb, ship, aliens, bullets,
+                  play_button, scores_button, exit_button):
+    """Update images on the screen and flip to the new screen"""
 
-    # Draw the play button if the game is inactive.
-    if not stats.game_active:
-        play_button.draw_button()
+    if not stats.game_active and stats.menu_open:
+        create_menu(screen, app_settings, play_button, scores_button,
+                    exit_button)
+    elif not stats.game_active and not stats.menu_open:
+        print("Game over")
+    elif stats.game_active:
+        # Redraw the screen during each pass through the loop
+        screen.fill(app_settings.bg_color)
+
+        # Redraw all bullets behind ship and aliens.
+        for bullet in bullets.sprites():
+            bullet.draw_bullet()
+
+        ship.blitme()
+        aliens.draw(screen)
+
+        # Draw the score information
+        sb.show_score()
 
     # Make the most recently drawn screen visible
     pygame.display.flip()

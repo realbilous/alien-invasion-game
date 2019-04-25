@@ -6,8 +6,13 @@ class GameStats():
         self.app_settings = app_settings
         self.reset_stats()
 
+        self.pause = False
+
         # Start game in an inactive state.
         self.game_active = False
+
+        # Start game with open menu
+        self.menu_open = True
 
         # High score should never be reset.
         self.high_score = 0
