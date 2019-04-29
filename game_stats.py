@@ -14,6 +14,9 @@ class GameStats():
         # Start game with open menu
         self.menu_open = True
 
+        # Check whether gamer was lost
+        self.game_lost = False
+
         # High score should never be reset.
         self.high_score = 0
 

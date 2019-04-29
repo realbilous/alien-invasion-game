@@ -23,18 +23,24 @@ class Settings():
         self.fleet_drop_speed = 10
 
         # How quickly the game speeds up
-        self.speedup_scale = 1.2
+        self.speedup_scale = 1.3
 
         # How quickly the alien point values increase
         self.score_scale = 1.5
 
+        # File to store scores
+        self.score_storage = "scores.csv"
+
         self.initialize_dynamic_settings()
 
+        # Limit of score records printed on leader board
+        self.score_records_limit = 20
+        
     def initialize_dynamic_settings(self):
         """Initialize settings that change throughout the game."""
-        self.ship_speed_factor = 1.5
-        self.bullet_speed_factor = 2
-        self.alien_speed_factor = 1
+        self.ship_speed_factor = 2
+        self.bullet_speed_factor = 3
+        self.alien_speed_factor = 1.5
 
         # fleet_direction of 1 represents right; -1 represents left.
         self.fleet_direction = 1

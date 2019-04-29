@@ -1,3 +1,5 @@
+import os
+
 import pygame
 from pygame.sprite import Group
 
@@ -7,9 +9,12 @@ from game_stats import GameStats
 import game_funtions as gf
 from button import Button
 from scoreboard import Scoreboard
-
+from score import Score
 
 def run_game():
+    # Center window that will be created
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
+
     # Initialize pygame, settings and screen object.
     pygame.init()
     app_settings = Settings()
@@ -34,10 +39,12 @@ def run_game():
     scores_button = Button(app_settings, screen, "Scores")
     exit_button = Button(app_settings, screen, "Exit")
 
+    # Make an object for managing scores
+    scores = Score(app_settings, stats)
 
     # Start the main loop for the game.
     while True:
-        gf.check_events(app_settings, screen, stats, sb, play_button,
+        gf.check_events(app_settings, screen, stats, scores, sb, play_button,
                         scores_button, exit_button, ship, aliens, bullets)
         if not stats.pause:
             if stats.game_active:
@@ -47,8 +54,8 @@ def run_game():
                 gf.update_aliens(app_settings, stats, sb,
                                  screen, ship, aliens, bullets)
 
-            gf.update_screen(app_settings, screen, stats, sb, ship, aliens, bullets,
-                             play_button, scores_button,
+            gf.update_screen(app_settings, screen, stats, scores, sb, ship,
+                             aliens, bullets, play_button, scores_button,
                              exit_button)
 
 run_game()
