@@ -1,7 +1,6 @@
 import sys
 from time import sleep
 
-
 import pygame
 from bullet import Bullet
 from alien import Alien
@@ -15,7 +14,7 @@ def check_keydown_events(event, app_settings, screen, stats, scores, sb,
     elif event.key == pygame.K_LEFT:
         ship.moving_left = True
     elif event.key == pygame.K_SPACE:
-        fire_bullet(app_settings, screen, ship, bullets)
+        fire_bullet(app_settings, stats, screen, ship, bullets)
     elif event.key == pygame.K_p:
         if not stats.menu_open:
             if not stats.pause:
@@ -33,11 +32,13 @@ def check_keydown_events(event, app_settings, screen, stats, scores, sb,
         pygame.mouse.set_visible(True)
 
 
-def fire_bullet(app_settings, screen, ship, bullets):
+def fire_bullet(app_settings, stats, screen, ship, bullets):
     """Fire a bullet if limit not reached yet"""
     # Create a new bullet and add it to the bullets group.
-    if len(bullets) < app_settings.bullets_allowed:
+    if len(bullets) < app_settings.bullets_allowed and not stats.pause:
         new_bullet = Bullet(app_settings, screen, ship)
+        if stats.sounds_on:
+            pygame.mixer.Sound.play(app_settings.shot_sound)
         bullets.add(new_bullet)
 
 
@@ -49,8 +50,9 @@ def check_keyup_evenets(event, ship):
         ship.moving_left = False
 
 
-def check_events(app_settings, screen, stats, scores, sb,
-                 play_button, scores_button, exit_button, ship, aliens, bullets):
+def check_events(app_settings, screen, stats, scores, sb, play_button,
+                 scores_button, exit_button, sound_on_button, ship, aliens,
+                 bullets):
     """Respond to key and mouse events."""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -70,33 +72,67 @@ def check_events(app_settings, screen, stats, scores, sb,
                               mouse_x, mouse_y)
             check_exit_button(stats, exit_button, mouse_x, mouse_y)
             check_scores_button(stats, scores_button, mouse_x, mouse_y)
+            check_sound_button(stats, sound_on_button, mouse_x, mouse_y)
+        elif event.type == pygame.MOUSEMOTION:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            check_mouse_coord(app_settings, stats, mouse_x, mouse_y,
+                              play_button, scores_button, exit_button)
+
+
+def check_sound_button(stats, sound_on_button, mouse_x, mouse_y):
+    """If sound button was clicked, change value of flag variable on opposite"""
+    button_clicked = sound_on_button.image_rect.collidepoint(mouse_x, mouse_y)
+    if button_clicked and stats.menu_open:
+        if stats.sounds_on:
+            stats.sounds_on = False
+        else:
+            stats.sounds_on = True
+
+
+def check_mouse_coord(app_settings, stats, mouse_x, mouse_y, *buttons):
+    for button in buttons:
+        button_directed = button.msg_rect.collidepoint(mouse_x, mouse_y)
+        if button_directed and stats.menu_open:
+            button.text_color = button.text_color_hover
+            if button.cursor_directed != 2:
+                button.cursor_directed = 1
+        elif not button_directed and stats.menu_open:
+            button.text_color = button.text_color_inactive
+            button.cursor_directed = 3
+        if button.cursor_directed == 1:
+            button.cursor_directed = 2
+            if stats.sounds_on:
+                pygame.mixer.Sound.play(app_settings.button_direct_sound)
 
 
 def check_play_button(app_settings, screen, stats, scores, sb, play_button, ship,
                       aliens, bullets, mouse_x, mouse_y):
     """Start a new game when the player clicks Play."""
-    button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
-    if button_clicked and not stats.game_active:
+    button_clicked = play_button.msg_rect.collidepoint(mouse_x, mouse_y)
+    if button_clicked and stats.menu_open:
         start_game(app_settings, screen, stats, scores, sb, ship,
                    aliens, bullets)
 
 
 def check_scores_button(stats, scores_button, mouse_x, mouse_y):
     """Show the best scores"""
-    button_clicked = scores_button.rect.collidepoint(mouse_x, mouse_y)
+    button_clicked = scores_button.msg_rect.collidepoint(mouse_x, mouse_y)
     if button_clicked and stats.menu_open:
         stats.menu_open = False
 
 
 def check_exit_button(stats, exit_button, mouse_x, mouse_y):
     """Close the app when the player clicks Exit."""
-    button_clicked = exit_button.rect.collidepoint(mouse_x, mouse_y)
+    button_clicked = exit_button.msg_rect.collidepoint(mouse_x, mouse_y)
     if button_clicked and stats.menu_open:
         sys.exit()
 
 
 def start_game(app_settings, screen, stats, scores, sb, ship, aliens, bullets):
     """Reset all statistic to start a new game"""
+    if stats.sounds_on:
+        pygame.mixer.Sound.play(app_settings.game_start_sound)
+
     # Update high score
     scores.update_high_score()
 
@@ -128,7 +164,8 @@ def start_game(app_settings, screen, stats, scores, sb, ship, aliens, bullets):
     ship.center_ship()
 
 
-def create_menu(screen, app_settings, play_button, scores_button, exit_button):
+def create_menu(screen, app_settings, stats, play_button, scores_button,
+                exit_button, sound_on_button, sound_off_button):
     """Create buttons and fill background"""
     # Fill background
     screen.fill(app_settings.bg_color)
@@ -139,15 +176,20 @@ def create_menu(screen, app_settings, play_button, scores_button, exit_button):
     for i, button in enumerate(buttons):
         button.set_y(first_button_position + 2 * i * button.height)
         button.draw_button()
+    if stats.sounds_on:
+        sound_on_button.draw_button()
+    else:
+        sound_off_button.draw_button()
 
 
 def update_screen(app_settings, screen, stats, scores, sb, ship, aliens, bullets,
-                  play_button, scores_button, exit_button):
+                  play_button, scores_button, exit_button, sound_on_button,
+                  sound_off_button):
     """Update images on the screen and flip to the new screen"""
 
     if not stats.game_active and stats.menu_open:
-        create_menu(screen, app_settings, play_button, scores_button,
-                    exit_button)
+        create_menu(screen, app_settings, stats, play_button, scores_button,
+                    exit_button, sound_on_button, sound_off_button)
     elif not stats.game_active and stats.game_lost:
         scores.ask_name()
         stats.menu_open = True
@@ -210,6 +252,8 @@ def check_bullet_alien_collisions(app_settings, screen, stats, sb, ship,
         sb.prep_level()
 
         create_fleet(app_settings, screen, ship, aliens)
+        if stats.sounds_on:
+            pygame.mixer.Sound.play(app_settings.level_up_sound)
 
 
 def get_number_aliens_x(app_settings, alien_width):
@@ -268,6 +312,8 @@ def change_fleet_direction(app_settings, aliens):
 
 def ship_hit(app_settings, stats, sb, screen, ship, aliens, bullets):
     """Respond to ship being hit by alien"""
+    if stats.sounds_on:
+        pygame.mixer.Sound.play(app_settings.ship_hit_sound)
     if stats.ships_left > 0:
         # Decrement ship_left
         stats.ships_left -= 1

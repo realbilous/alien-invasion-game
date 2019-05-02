@@ -1,4 +1,4 @@
-
+import pygame
 
 class Settings():
     """A class to store all settings for Alien Invasion"""
@@ -31,11 +31,27 @@ class Settings():
         # File to store scores
         self.score_storage = "scores.csv"
 
-        self.initialize_dynamic_settings()
+        # Images of sound on/off buttons
+        self.sound_on_button = "images\\sound_on.bmp"
+        self.sound_off_button = "images\\sound_off.bmp"
 
         # Limit of score records printed on leader board
         self.score_records_limit = 20
-        
+
+        # Sounds
+        # Sound of ship's shot
+        self.shot_sound = pygame.mixer.Sound("sounds\\shot.wav")
+        # Sound for cursor hovering on button
+        self.button_direct_sound = pygame.mixer.Sound("sounds\\button_direct.wav")
+        # Sound for ship hit
+        self.ship_hit_sound = pygame.mixer.Sound("sounds\\ship_hit.wav")
+        # Sound when entire fleet destroyed
+        self.level_up_sound = pygame.mixer.Sound("sounds\\success.wav")
+        # Sound for game starting
+        self.game_start_sound = pygame.mixer.Sound("sounds\\game_start.wav")
+
+        self.initialize_dynamic_settings()
+
     def initialize_dynamic_settings(self):
         """Initialize settings that change throughout the game."""
         self.ship_speed_factor = 2

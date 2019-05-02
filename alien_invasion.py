@@ -38,6 +38,10 @@ def run_game():
     play_button = Button(app_settings, screen, "Play")
     scores_button = Button(app_settings, screen, "Scores")
     exit_button = Button(app_settings, screen, "Exit")
+    sound_on_button = Button(app_settings, screen,
+                             img_path=app_settings.sound_on_button)
+    sound_off_button = Button(app_settings, screen,
+                              img_path=app_settings.sound_off_button)
 
     # Make an object for managing scores
     scores = Score(app_settings, stats)
@@ -45,7 +49,8 @@ def run_game():
     # Start the main loop for the game.
     while True:
         gf.check_events(app_settings, screen, stats, scores, sb, play_button,
-                        scores_button, exit_button, ship, aliens, bullets)
+                        scores_button, exit_button, sound_on_button, ship,
+                        aliens, bullets)
         if not stats.pause:
             if stats.game_active:
                 ship.update()
@@ -56,6 +61,6 @@ def run_game():
 
             gf.update_screen(app_settings, screen, stats, scores, sb, ship,
                              aliens, bullets, play_button, scores_button,
-                             exit_button)
+                             exit_button, sound_on_button, sound_off_button)
 
 run_game()
